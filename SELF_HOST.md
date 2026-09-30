@@ -69,6 +69,27 @@ USE_DB_AUTHENTICATION=false
 # PROXY_USERNAME=
 # PROXY_PASSWORD=
 
+## === Browser rendering (Camoufox) ===
+# The rendering service runs a pool of Camoufox instances, each with its own
+# spoofed fingerprint. It recycles them periodically to rotate fingerprints.
+# Total concurrent pages = CAMOUFOX_POOL_SIZE x CAMOUFOX_PAGES_PER_BROWSER
+# (CAMOUFOX_PAGES_PER_BROWSER defaults to MAX_CONCURRENT_PAGES / CAMOUFOX_POOL_SIZE).
+# Each instance needs roughly 300-500MB, so raise the service's memory limit
+# along with CAMOUFOX_POOL_SIZE.
+# CAMOUFOX_POOL_SIZE=2
+# CAMOUFOX_RECYCLE_PAGES=100
+# CAMOUFOX_MAX_LIFETIME_MS=1800000
+
+# To pin each browser instance to a different proxy exit IP (recommended when
+# you have a proxy pool, since it keeps each fingerprint consistent with its IP),
+# set PROXY_SERVERS to a ";"-separated list of "server|username|password" entries.
+# Browser N is pinned to entry N. Takes precedence over PROXY_SERVER.
+# PROXY_SERVERS=http://0.1.2.3:1234|user|pass;http://0.1.2.4:1234|user|pass
+
+# With proxies configured, fingerprint timezone/locale/geolocation are aligned
+# with the proxy's exit IP by default. Set to false to disable.
+# CAMOUFOX_GEOIP=auto
+
 ## === /search API ===
 # By default, the /search API will use Google search.
 

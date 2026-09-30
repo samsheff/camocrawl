@@ -35,17 +35,26 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.service.playwright.port }}
-            initialDelaySeconds: 30
+            # Launching a Camoufox pool (and any GeoIP lookups) is slow, so allow
+            # a generous window before declaring the pod dead.
+            initialDelaySeconds: 120
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             successThreshold: 1
-            failureThreshold: 3
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /health
               port: {{ .Values.service.playwright.port }}
             initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 10
             successThreshold: 1
             failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.playwright.resources.requests.cpu | default "500m" }}
+              memory: {{ .Values.playwright.resources.requests.memory | default "2Gi" }}
+            limits:
+              cpu: {{ .Values.playwright.resources.limits.cpu | default "2000m" }}
+              memory: {{ .Values.playwright.resources.limits.memory | default "4Gi" }}

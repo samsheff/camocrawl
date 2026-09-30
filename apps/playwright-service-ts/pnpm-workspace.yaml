@@ -1,7 +1,18 @@
 allowBuilds:
+  # esbuild ships a platform-specific binary via its install script; the
+  # Dockerfile installs devDependencies to run `tsc`.
   esbuild: true
+  # camoufox-js declares better-sqlite3 but never imports it; skipping its
+  # native build keeps the image free of a python/node-gyp toolchain. It must be
+  # an explicit `false` rather than left to the default: pnpm 11 fails the
+  # install outright (ERR_PNPM_IGNORED_BUILDS) when CI=true and a dependency
+  # has a build script that was neither allowed nor explicitly ignored.
+  better-sqlite3: false
 overrides:
   "body-parser@>=2.0.0 <2.3.0": "2.3.0"
   "path-to-regexp@<8.4.0": ">=8.4.0"
   "qs@<6.15.2": ">=6.15.2 <7.0.0"
   "esbuild@>=0.17.0 <0.28.1": "0.28.1"
+  # camoufox-js speaks Playwright's Firefox Juggler protocol and pins itself to
+  # <1.61.0. Resolving 1.63 breaks the protocol handshake at launch.
+  "playwright-core": "1.60.0"

@@ -1,12 +1,17 @@
 {
   "name": "playwright-scraper-api",
   "version": "1.0.0",
-  "description": "browser rendering service with playwright",
+  "description": "browser rendering service for firecrawl, backed by a pool of Camoufox (anti-detect Firefox) instances",
   "main": "api.ts",
+  "type": "module",
   "scripts": {
     "start": "node dist/api.js",
     "build": "tsc",
-    "dev": "tsx api.ts"
+    "dev": "tsx api.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "camoufox:fetch": "camoufox-js fetch",
+    "camoufox:version": "camoufox-js version"
   },
   "keywords": [],
   "author": "Jeff Pereira",
@@ -15,19 +20,22 @@
     "node": ">=22.13.0"
   },
   "dependencies": {
+    "camoufox-js": "^0.12.0",
     "dotenv": "^16.4.5",
     "express": "^5.2.1",
     "ipaddr.js": "^2.3.0",
-    "playwright": "^1.58.1",
-    "proxy-chain": "^2.7.1",
-    "user-agents": "^1.1.669"
+    "playwright-core": "^1.58.1",
+    "proxy-chain": "^2.7.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^22.15.30",
-    "@types/user-agents": "^1.0.4",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "supertest": "^7.3.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@11.4.0"
 }

@@ -67,12 +67,49 @@ services:
     build: apps/playwright-service-ts
     environment:
       PORT: 3000
+      # --- proxy configuration -------------------------------------------
+      # A single proxy for every browser. Prefer PROXY_SERVERS (below) when you
+      # have a pool of exits and want each browser pinned to its own IP.
       PROXY_SERVER: ${PROXY_SERVER}
       PROXY_USERNAME: ${PROXY_USERNAME}
       PROXY_PASSWORD: ${PROXY_PASSWORD}
+      # Per-browser proxy rotation: "server|username|password" entries separated
+      # by ";". Browser N is pinned to entry N, so its fingerprint stays
+      # consistent with that exit IP across recycles.
+      #   PROXY_SERVERS=http://p1:8000|u1|p1;http://p2:8000|u2|p2
+      PROXY_SERVERS: ${PROXY_SERVERS}
+      # Aligns each fingerprint's timezone/locale/geo with its proxy exit IP.
+      # "auto" enables it when a proxy is configured.
+      CAMOUFOX_GEOIP: ${CAMOUFOX_GEOIP:-auto}
+
+      # --- Camoufox browser pool -----------------------------------------
+      # Number of Camoufox instances kept warm. Each one runs with its own
+      # freshly generated fingerprint.
+      CAMOUFOX_POOL_SIZE: ${CAMOUFOX_POOL_SIZE:-2}
+      # Concurrent pages per browser instance. Defaults to
+      # ceil(MAX_CONCURRENT_PAGES / CAMOUFOX_POOL_SIZE).
+      CAMOUFOX_PAGES_PER_BROWSER: ${CAMOUFOX_PAGES_PER_BROWSER}
+      # Recycle a browser after this many pages / this long, to rotate
+      # fingerprints and release accumulated memory.
+      CAMOUFOX_RECYCLE_PAGES: ${CAMOUFOX_RECYCLE_PAGES:-100}
+      CAMOUFOX_MAX_LIFETIME_MS: ${CAMOUFOX_MAX_LIFETIME_MS:-1800000}
+      # Fingerprint realism knobs. Defaults are tuned for unattended scraping.
+      CAMOUFOX_HEADLESS: ${CAMOUFOX_HEADLESS:-true}
+      CAMOUFOX_OS: ${CAMOUFOX_OS}
+      CAMOUFOX_LOCALE: ${CAMOUFOX_LOCALE}
+      CAMOUFOX_HUMANIZE: ${CAMOUFOX_HUMANIZE}
+      CAMOUFOX_BLOCK_WEBRTC: ${CAMOUFOX_BLOCK_WEBRTC:-true}
+      CAMOUFOX_BLOCK_IMAGES: ${CAMOUFOX_BLOCK_IMAGES:-false}
+      CAMOUFOX_BLOCK_SERVICE_WORKERS: ${CAMOUFOX_BLOCK_SERVICE_WORKERS:-true}
+      CAMOUFOX_WINDOW: ${CAMOUFOX_WINDOW}
+      CAMOUFOX_VIEWPORT: ${CAMOUFOX_VIEWPORT}
+      CAMOUFOX_LAUNCH_TIMEOUT_MS: ${CAMOUFOX_LAUNCH_TIMEOUT_MS:-90000}
+      CAMOUFOX_ACQUIRE_TIMEOUT_MS: ${CAMOUFOX_ACQUIRE_TIMEOUT_MS:-30000}
+
       ALLOW_LOCAL_WEBHOOKS: ${ALLOW_LOCAL_WEBHOOKS}
       BLOCK_MEDIA: ${BLOCK_MEDIA}
-      # Configure maximum concurrent pages for Playwright browser instances
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Total concurrent pages across the whole pool.
       MAX_CONCURRENT_PAGES: ${CRAWL_CONCURRENT_REQUESTS:-10}
     networks:
       - backend
@@ -81,9 +118,25 @@ services:
     cap_drop:
       - ALL
     # Resource limits for Docker Compose (not Swarm)
-    cpus: 2.0
-    mem_limit: 4G
-    memswap_limit: 4G
+    cpus: 4.0
+    mem_limit: 8G
+    memswap_limit: 8G
+    # Firefox needs more headroom than Chromium: each instance keeps a full
+    # render process tree plus its context. Raise this alongside
+    # CAMOUFOX_POOL_SIZE.
+    shm_size: 1gb
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
     logging:
       driver: "json-file"
       options:
@@ -108,7 +161,10 @@ services:
       redis:
         condition: service_started
       playwright-service:
-        condition: service_started
+        # The API falls back to other engines, so it does not have to block on
+        # the browser pool, but waiting for readiness avoids a burst of failed
+        # scrapes while the first Camoufox instances are still launching.
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     ports:

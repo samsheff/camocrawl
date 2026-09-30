@@ -116,6 +116,16 @@ playwright:
   tag: "latest"
   pullPolicy: Always
   replicaCount: 1
+  # Camoufox keeps a full process tree per pool slot, so the rendering service
+  # needs more memory than the other Firecrawl components. Size these against
+  # playwrightConfig.CAMOUFOX_POOL_SIZE.
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
 
 redis:
   image: redis:alpine
@@ -176,6 +186,15 @@ playwrightConfig:
   ALLOW_LOCAL_WEBHOOKS: ""
   BLOCK_MEDIA: ""
   MAX_CONCURRENT_PAGES: "10"
+  # Camoufox browser pool. Capacity is CAMOUFOX_POOL_SIZE x
+  # CAMOUFOX_PAGES_PER_BROWSER; browsers are recycled after CAMOUFOX_RECYCLE_PAGES
+  # pages or CAMOUFOX_MAX_LIFETIME_MS, to rotate fingerprints.
+  CAMOUFOX_POOL_SIZE: "2"
+  CAMOUFOX_RECYCLE_PAGES: "100"
+  CAMOUFOX_MAX_LIFETIME_MS: "1800000"
+  # Align each fingerprint's timezone/locale/geo with its proxy exit IP.
+  CAMOUFOX_GEOIP: "auto"
+  LOG_LEVEL: "info"
 
 secret:
   OPENAI_API_KEY: ""

@@ -7,3 +7,8 @@ data:
   ALLOW_LOCAL_WEBHOOKS: {{ .Values.playwrightConfig.ALLOW_LOCAL_WEBHOOKS | quote }}
   BLOCK_MEDIA: {{ .Values.playwrightConfig.BLOCK_MEDIA | quote }}
   MAX_CONCURRENT_PAGES: {{ .Values.playwrightConfig.MAX_CONCURRENT_PAGES | quote }}
+  CAMOUFOX_POOL_SIZE: {{ .Values.playwrightConfig.CAMOUFOX_POOL_SIZE | quote }}
+  CAMOUFOX_RECYCLE_PAGES: {{ .Values.playwrightConfig.CAMOUFOX_RECYCLE_PAGES | quote }}
+  CAMOUFOX_MAX_LIFETIME_MS: {{ .Values.playwrightConfig.CAMOUFOX_MAX_LIFETIME_MS | quote }}
+  CAMOUFOX_GEOIP: {{ .Values.playwrightConfig.CAMOUFOX_GEOIP | quote }}
+  LOG_LEVEL: {{ .Values.playwrightConfig.LOG_LEVEL | quote }}

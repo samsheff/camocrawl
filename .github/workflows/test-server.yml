@@ -165,37 +165,41 @@ jobs:
           path: apps/api/sharedLibs/go-html-to-md/libhtml-to-markdown.so
           key: ${{ steps.golib_restore.outputs.cache-primary-key }}
 
-      - name: Restore Playwright cache
+      - name: Restore Camoufox cache
         if: matrix.engine == 'playwright'
-        id: pw_cache
+        id: camoufox_cache
         uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-${{ runner.arch }}-pw-chromium-${{ hashFiles('apps/playwright-service-ts/pnpm-lock.yaml', 'apps/playwright-service-ts/package.json') }}
+          path: ~/.cache/camoufox
+          key: ${{ runner.os }}-${{ runner.arch }}-camoufox-${{ hashFiles('apps/playwright-service-ts/pnpm-lock.yaml', 'apps/playwright-service-ts/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-pw-chromium-
+            ${{ runner.os }}-${{ runner.arch }}-camoufox-
 
-      - name: Install Playwright node modules
+      - name: Install Playwright service node modules
         if: matrix.engine == 'playwright'
         run: pnpm install --frozen-lockfile
         working-directory: ./apps/playwright-service-ts
 
-      - name: Install Playwright system deps
+      - name: Install Playwright service system deps
         if: matrix.engine == 'playwright'
-        run: pnpm exec playwright install-deps chromium
+        run: sudo pnpm exec playwright-core install-deps firefox
         working-directory: ./apps/playwright-service-ts
 
-      - name: Install Playwright Chromium
-        if: matrix.engine == 'playwright' && steps.pw_cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium
+      - name: Fetch Camoufox
+        if: matrix.engine == 'playwright' && steps.camoufox_cache.outputs.cache-hit != 'true'
+        run: pnpm run camoufox:fetch
         working-directory: ./apps/playwright-service-ts
+        env:
+          # Cache the browser in a predictable location rather than in the
+          # per-user cache dir the restore step uses.
+          CAMOUFOX_INSTALL_DIR: ${{ github.workspace }}/.camoufox
 
-      - name: Cache Playwright
-        if: matrix.engine == 'playwright' && steps.pw_cache.outputs.cache-hit != 'true'
+      - name: Cache Camoufox
+        if: matrix.engine == 'playwright' && steps.camoufox_cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: ${{ steps.pw_cache.outputs.cache-primary-key }}
+          path: ~/.cache/camoufox
+          key: ${{ steps.camoufox_cache.outputs.cache-primary-key }}
 
       - name: Set up SearXNG
         if: matrix.search == 'searxng'
@@ -232,14 +236,18 @@ jobs:
       - name: Generate parse upload ref secret
         run: echo "PARSE_UPLOAD_REF_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - name: Start playwright
+      - name: Start Camoufox rendering service
         if: matrix.engine == 'playwright'
         run: |
           pnpm run dev > playwright.log 2>&1 &
-          pnpx wait-on tcp:3003 -t 15s
+          # Launching the pool (and any GeoIP lookups) is the slow part, so
+          # wait on readiness rather than just on the TCP port.
+          pnpx wait-on http-get://127.0.0.1:3003/health -t 120s
         working-directory: ./apps/playwright-service-ts
         env:
           PORT: 3003
+          LOG_LEVEL: info
+          CAMOUFOX_INSTALL_DIR: ${{ github.workspace }}/.camoufox
 
       - name: Run Docker Postgres
         if: matrix.nuq == 'postgres'
@@ -393,7 +401,7 @@ jobs:
         if: always() && matrix.search == 'searxng'
         run: docker logs searxng > logs/searxng.log && docker kill searxng
 
-      - name: Copy Playwright logs
+      - name: Copy rendering service logs
         if: always() && matrix.engine == 'playwright'
         run: cp ./apps/playwright-service-ts/playwright.log logs/playwright.log
 
