@@ -1,3 +1,10 @@
+/*
+ * CamoCrawl — original test module for the Camoufox rendering service.
+ * Part of CamoCrawl (Firecrawl + Camoufox backend), licensed under the
+ * GNU Affero General Public License v3.0 or later; see root LICENSE.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Do not remove this header or any upstream copyright/license notices.
+ */
 import { describe, expect, it } from 'vitest';
 import {
   ConfigError,

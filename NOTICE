@@ -1,0 +1,62 @@
+CamoCrawl — NOTICE
+====================
+
+CamoCrawl is a fork of Firecrawl whose browser rendering backend has been
+replaced with Camoufox. It is currently a non-commercial, open-source project.
+
+1. Upstream Firecrawl code
+--------------------------
+Portions of this repository are derived from Firecrawl
+(https://github.com/firecrawl/firecrawl) by Sideguide Technologies Inc.,
+licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+The full license text is in the root LICENSE file, including the Firecrawl
+copyright notice appended to it. All Firecrawl copyright notices and license
+texts present in this repository are preserved unmodified.
+
+Firecrawl SDKs and some UI components in this repository carry their own
+MIT License notices; see the LICENSE files in those directories
+(e.g. apps/js-sdk/LICENSE, apps/python-sdk/LICENSE, apps/ruby-sdk/LICENSE,
+apps/elixir-sdk/LICENSE, apps/ui/ingestion-ui/LICENSE).
+
+2. Camoufox components
+----------------------
+CamoCrawl does not vendor Camoufox source code. It integrates with Camoufox
+at runtime through:
+
+- the `camoufox-js` npm client (https://github.com/apify/camoufox-js),
+  licensed under the Mozilla Public License 2.0 (MPL-2.0). A copy of that
+  license is provided in THIRD_PARTY_LICENSES/camoufox-js-MPL-2.0.md; and
+- the Camoufox browser build (https://github.com/daijro/camoufox), also
+  MPL-2.0-licensed, which is downloaded at Docker build time
+  (`camoufox-js fetch` in apps/playwright-service-ts/Dockerfile) and is not
+  checked into this repository. Note that a small vendored part of the
+  Camoufox browser (the `cursory` cursor-movement library,
+  `additions/juggler/input/cursory/`) is licensed LGPLv3-or-later rather
+  than MPL-2.0, per the upstream Camoufox repository.
+
+No Camoufox source file has been copied into this repository, so no
+Camoufox file-level header is reproduced here. The MPL-2.0 obligations that
+apply are those of the `camoufox-js` dependency and of the browser binary
+you download when building or running CamoCrawl; consult
+THIRD_PARTY_LICENSES/README.md for details.
+
+3. CamoCrawl-original code
+--------------------------
+The Camoufox rendering service in apps/playwright-service-ts
+(camoufox.ts, config.ts, pool.ts, scrape.ts, ssrf.ts, logger.ts, the
+corresponding *.spec.ts tests, and the rewrite of api.ts), together with the
+associated Docker, Docker Compose, Helm, CI, and documentation changes, was
+written for CamoCrawl. Like the Firecrawl code it builds on, it is made
+available under the AGPL-3.0 terms in the root LICENSE file. Per-file
+provenance headers are included in those sources.
+
+4. Other third-party dependencies
+---------------------------------
+See THIRD_PARTY_LICENSES/README.md for the licenses of the runtime
+dependencies (e.g. playwright-core under Apache-2.0, express and
+ipaddr.js under MIT, proxy-chain under Apache-2.0, dotenv under
+BSD-2-Clause). Those notices remain applicable to their respective packages.
+
+DO NOT REMOVE existing copyright or license headers, LICENSE files, or
+attribution notices when contributing. See the Licensing section of
+README.md.

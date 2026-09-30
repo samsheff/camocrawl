@@ -1,3 +1,10 @@
+/*
+ * CamoCrawl — original rendering-service module.
+ * Part of CamoCrawl (Firecrawl + Camoufox backend), licensed under the
+ * GNU Affero General Public License v3.0 or later; see root LICENSE.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Do not remove this header or any upstream copyright/license notices.
+ */
 import type { Browser, BrowserContext, Page } from 'playwright-core';
 import type { ProxyTarget, ServiceConfig } from './config.js';
 import { redactProxy } from './config.js';

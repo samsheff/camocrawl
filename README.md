@@ -1,915 +1,632 @@
-<h3 align="center">
-  <a name="readme-top"></a>
-  <img
-    src="https://raw.githubusercontent.com/firecrawl/firecrawl/main/img/firecrawl_logo.png"
-    height="200"
-  >
-</h3>
+<p align="center">
+  <img src="./logo.png" height="200" alt="CamoCrawl logo — a camouflaged fox curled around a network globe">
+</p>
 
-<div align="center">
-  <a href="https://github.com/firecrawl/firecrawl/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/firecrawl/firecrawl" alt="License">
-  </a>
-  <a href="https://pepy.tech/project/firecrawl-py">
-    <img src="https://static.pepy.tech/badge/firecrawl-py" alt="Downloads">
-  </a>
-  <a href="https://GitHub.com/firecrawl/firecrawl/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/firecrawl/firecrawl.svg" alt="GitHub Contributors">
-  </a>
-  <a href="https://firecrawl.dev">
-    <img src="https://img.shields.io/badge/Visit-firecrawl.dev-orange" alt="Visit firecrawl.dev">
-  </a>
-</div>
+<h1 align="center">CamoCrawl</h1>
 
-<div>
-  <p align="center">
-    <a href="https://twitter.com/firecrawl">
-      <img src="https://img.shields.io/badge/Follow%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X" />
-    </a>
-    <a href="https://www.linkedin.com/company/104100957">
-      <img src="https://img.shields.io/badge/Follow%20on%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="Follow on LinkedIn" />
-    </a>
-    <a href="https://discord.gg/firecrawl">
-      <img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join our Discord" />
-    </a>
-  </p>
-</div>
+<p align="center">
+  <strong>Firecrawl with a Camoufox browser backend.</strong><br>
+  Self-hostable web scraping and crawling — Firecrawl's API and extraction
+  pipeline rendering through a pool of anti-detect Camoufox (Firefox) instances.
+</p>
+
+<p align="center">
+  <a href="./LICENSE">AGPL-3.0</a> ·
+  <a href="./NOTICE">Notices</a> ·
+  <a href="./THIRD_PARTY_LICENSES/">Third-party licenses</a> ·
+  <a href="./SELF_HOST.md">Self-hosting</a> ·
+  <a href="./apps/playwright-service-ts/README.md">Rendering-service docs</a>
+</p>
+
+> **Fork notice.** CamoCrawl is an independent, non-commercial community fork
+> of [Firecrawl](https://github.com/firecrawl/firecrawl). It is not affiliated
+> with, endorsed, or supported by Firecrawl (Sideguide Technologies Inc.) or
+> by the Camoufox project. Upstream copyright notices and license texts are
+> preserved — see [Licensing](#licensing) and [`NOTICE`](./NOTICE).
 
 ---
 
-# **🔥 Firecrawl**
+## Table of contents
 
-**The API to search, scrape, and interact with the web at scale. 🔥** The web context API to find sources, extract content, and turn it into clean Markdown or structured data your agents can ship with. Open source and available as a [hosted service](https://firecrawl.dev/?ref=github).
-
-_Pst. Hey, you, join our stargazers :)_
-
-<a href="https://github.com/firecrawl/firecrawl">
-  <img src="https://img.shields.io/github/stars/firecrawl/firecrawl.svg?style=social&label=Star&maxAge=2592000" alt="GitHub stars">
-</a>
-
----
-
-## Why Firecrawl?
-
-- **Industry-leading reliability**: Covers 96% of the web, including JS-heavy pages — no proxy headaches, just clean data ([see benchmarks](https://www.firecrawl.dev/blog/the-worlds-best-web-data-api-v25))
-- **Blazingly fast**: P95 latency of 3.4s across millions of pages, built for real-time agents and dynamic apps
-- **LLM-ready output**: Clean markdown, structured JSON, screenshots, and more — spend fewer tokens, build better AI apps
-- **We handle the hard stuff**: Rotating proxies, orchestration, rate limits, JS-blocked content, and more — zero configuration
-- **Agent ready**: Connect Firecrawl to any AI agent or MCP client with a single command
-- **Media parsing**: Parse and extract content from web-hosted PDFs, DOCX, and more
-- **Actions**: Click, scroll, write, wait, and press before extracting content
-- **Open source**: Developed transparently and collaboratively — [join our community](https://discord.gg/firecrawl)
+- [What problem it solves](#what-problem-it-solves)
+- [Firecrawl × Camoufox relationship](#firecrawl--camoufox-relationship)
+- [Architecture overview](#architecture-overview)
+- [Key features](#key-features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Docker / Docker Compose](#docker--docker-compose)
+- [Configuration and environment variables](#configuration-and-environment-variables)
+- [Example crawl / API usage](#example-crawl--api-usage)
+- [Development](#development)
+- [Testing](#testing)
+- [Repository structure](#repository-structure)
+- [Troubleshooting](#troubleshooting)
+- [Upstream projects and acknowledgements](#upstream-projects-and-acknowledgements)
+- [Licensing](#licensing)
+- [Contributing](#contributing)
 
 ---
 
-## Feature Overview
+## What problem it solves
 
-**Core Endpoints**
+Firecrawl's self-hosted stack renders JavaScript-heavy pages with a
+Chromium-based Playwright service. Chromium with a patched user agent is
+comparatively easy for bot-mitigation systems to fingerprint, which means
+more blocks, captchas, and empty renders on protected targets.
 
-| Feature | Description |
-|---------|-------------|
-| [**Search**](#search) | Search the web and get full page content from results |
-| [**Scrape**](#scrape) | Convert any URL to markdown, HTML, screenshots, or structured JSON |
-| [**Interact**](#interact) | Scrape a page, then interact with it using AI prompts or code |
+CamoCrawl keeps Firecrawl's API, crawling engine, queueing, and extraction
+pipeline intact and swaps the rendering backend for
+[Camoufox](https://camoufox.com/) — a patched Firefox that spoofs a coherent,
+self-consistent device fingerprint (user agent, platform, screen geometry,
+WebGL, fonts, canvas/audio noise, locale/timezone) instead of a bag of
+independently randomised values. Each browser instance in the pool gets a
+freshly generated fingerprint, and instances are recycled on a page-count or
+age budget so fingerprints rotate automatically.
 
-**More**
-
-| Feature | Description |
-|---------|-------------|
-| [**Agent**](#agent) | Automated data gathering, just describe what you need |
-| [**Crawl**](#crawl) | Scrape all URLs of a website with a single request |
-| [**Map**](#map) | Discover all URLs on a website instantly |
-| [**Batch Scrape**](#batch-scrape) | Scrape thousands of URLs asynchronously |
-
----
-
-## Quick Start
-
-Sign up at [firecrawl.dev](https://firecrawl.dev) to get your API key. Try the [playground](https://firecrawl.dev/playground) to test it out.
-
-### Search
-
-Search the web and get full content from results.
-
-```python
-from firecrawl import Firecrawl
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-search_result = app.search("firecrawl", limit=5)
-```
-
-<details>
-<summary><b>Node.js / cURL / CLI</b></summary>
-
-**Node.js**
-```javascript
-import { Firecrawl } from 'firecrawl';
-
-const app = new Firecrawl({apiKey: "fc-YOUR_API_KEY"});
-
-app.search("firecrawl", { limit: 5 })
-```
-
-**cURL**
-```bash
-curl -X POST 'https://api.firecrawl.dev/v2/search' \
--H 'Authorization: Bearer fc-YOUR_API_KEY' \
--H 'Content-Type: application/json' \
--d '{
-  "query": "firecrawl",
-  "limit": 5
-}'
-```
-
-**CLI**
-```bash
-firecrawl search "firecrawl" --limit 5
-```
-</details>
-
-Output:
-```json
-[
-  {
-    "url": "https://firecrawl.dev",
-    "title": "Firecrawl",
-    "markdown": "Turn websites into..."
-  },
-  {
-    "url": "https://docs.firecrawl.dev",
-    "title": "Firecrawl Docs",
-    "markdown": "# Getting Started..."
-  }
-]
-```
-
-### Scrape
-
-Get LLM-ready data from any website — markdown, JSON, screenshots, and more.
-
-```python
-from firecrawl import Firecrawl
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-result = app.scrape('firecrawl.dev')
-```
-
-<details>
-<summary><b>Node.js / cURL / CLI</b></summary>
-
-**Node.js**
-```javascript
-import { Firecrawl } from 'firecrawl';
-
-const app = new Firecrawl({ apiKey: "fc-YOUR_API_KEY" });
-
-app.scrape('firecrawl.dev')
-```
-
-**cURL**
-```bash
-curl -X POST 'https://api.firecrawl.dev/v2/scrape' \
--H 'Authorization: Bearer fc-YOUR_API_KEY' \
--H 'Content-Type: application/json' \
--d '{
-  "url": "firecrawl.dev"
-}'
-```
-
-**CLI**
-```bash
-firecrawl scrape https://firecrawl.dev
-firecrawl https://firecrawl.dev --only-main-content
-```
-</details>
-
-Output:
-```
-# Firecrawl
-
-Firecrawl helps AI agents search, scrape, and interact with the web.
-
-## Features
-- Search: Find information across the web
-- Scrape: Clean data from any page
-- Interact: Click, navigate, and operate pages
-- Agent: Autonomous data gathering
-```
-
-### Interact
-
-Scrape a page, then interact with it using AI prompts or code.
-
-```python
-from firecrawl import Firecrawl
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-result = app.scrape("https://amazon.com")
-scrape_id = result.metadata.scrape_id
-
-app.interact(scrape_id, prompt="Search for 'mechanical keyboard'")
-app.interact(scrape_id, prompt="Click the first result")
-```
-
-<details>
-<summary><b>Node.js / cURL / CLI</b></summary>
-
-**Node.js**
-```javascript
-import { Firecrawl } from 'firecrawl';
-
-const app = new Firecrawl({apiKey: "fc-YOUR_API_KEY"});
-
-const result = await app.scrape("https://amazon.com");
-
-await app.interact(result.metadata.scrapeId, {
-  prompt: "Search for 'mechanical keyboard'"
-});
-await app.interact(result.metadata.scrapeId, {
-  prompt: "Click the first result"
-});
-```
-
-**cURL**
-```bash
-# 1. Scrape the page
-curl -X POST 'https://api.firecrawl.dev/v2/scrape' \
--H 'Authorization: Bearer fc-YOUR_API_KEY' \
--H 'Content-Type: application/json' \
--d '{"url": "https://amazon.com"}'
-
-# 2. Interact with the page (use scrapeId from step 1)
-curl -X POST 'https://api.firecrawl.dev/v2/scrape/SCRAPE_ID/interact' \
--H 'Authorization: Bearer fc-YOUR_API_KEY' \
--H 'Content-Type: application/json' \
--d '{"prompt": "Search for mechanical keyboard"}'
-```
-
-**CLI**
-```bash
-firecrawl scrape https://amazon.com
-firecrawl interact exec --prompt "Search for 'mechanical keyboard'"
-firecrawl interact exec --prompt "Click the first result"
-```
-</details>
-
-Output:
-```json
-{
-  "success": true,
-  "output": "Keyboard available at $100",
-  "liveViewUrl": "https://liveview.firecrawl.dev/..."
-}
-```
+In short: **the Firecrawl API you already know, with pages rendered by a
+browser built to blend into real traffic.**
 
 ---
 
-## Power Your Agent
+## Firecrawl × Camoufox relationship
 
-Connect Firecrawl to any AI agent or MCP client in minutes.
+| Project | Role in CamoCrawl | Upstream |
+|---------|-------------------|----------|
+| **Firecrawl** | The whole platform: REST API (`/scrape`, `/crawl`, `/map`, `/search`, `/batch`, agent/extract), workers, queues, extraction to Markdown/JSON, SDKs. CamoCrawl is a fork of this codebase. | https://github.com/firecrawl/firecrawl |
+| **Camoufox** | The browser that actually loads pages: a stealth Firefox fork plus the `camoufox-js` client used to launch it with generated fingerprints. | https://github.com/daijro/camoufox · https://github.com/apify/camoufox-js |
+| **CamoCrawl** (this repo) | The glue: a rewritten rendering microservice (`apps/playwright-service-ts`) that speaks Firecrawl's existing `POST /scrape` contract but serves it from a pooled set of Camoufox instances, plus the Docker/Compose/Helm/CI wiring to run it. | — |
 
-### Skill
+The integration point is deliberately narrow: Firecrawl already delegates
+rendering to a microservice via `PLAYWRIGHT_MICROSERVICE_URL`. CamoCrawl
+replaces that service's internals (Chromium → Camoufox pool) while keeping
+the HTTP contract, so the rest of the Firecrawl engine calls it unchanged.
 
-Give your agent easy access to real-time web data with one command.
-
-```bash
-npx -y firecrawl-cli@latest init --all --browser
-```
-
-Restart your agent after installing. Works with [Claude Code](https://claude.ai/code), [Antigravity](https://antigravity.google), [OpenCode](https://opencode.ai), and more.
-
-### MCP
-
-Connect any MCP-compatible client to the web in seconds.
-
-```json
-{
-  "mcpServers": {
-    "firecrawl-mcp": {
-      "command": "npx",
-      "args": ["-y", "firecrawl-mcp"],
-      "env": {
-        "FIRECRAWL_API_KEY": "fc-YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-
-### Agent Onboarding
-
-Are you an AI agent? Fetch this skill to sign up your user, get an API key, and start building with Firecrawl.
-
-```bash
-curl -s https://firecrawl.dev/agent-onboarding/SKILL.md
-```
-
-See the [Skill + CLI documentation](https://docs.firecrawl.dev/sdks/cli) for all available commands. For MCP, see [firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server).
+No Camoufox source code is vendored in this repository. Camoufox arrives as
+an npm dependency (`camoufox-js`) and as a browser binary downloaded at
+Docker build time. See [Licensing](#licensing).
 
 ---
 
-## More Endpoints
+## Architecture overview
 
-### Agent
+```
+                        ┌─────────────────────────────┐
+POST /v1/scrape         │      Firecrawl API (apps/api)│
+POST /v1/crawl  ──────► │  queue (Redis/RabbitMQ/nuq)  │──► workers ──► Markdown/JSON
+POST /v1/map            │  extraction, search, agent   │
+                        └──────────────┬──────────────┘
+                                       │ PLAYWRIGHT_MICROSERVICE_URL
+                                       ▼  POST /scrape
+                        ┌──────────────────────────────┐
+                        │ Camoufox rendering service   │
+                        │ (apps/playwright-service-ts) │
+                        │                              │
+                        │  CamoufoxPool (pool.ts)      │
+                        │   slot 0 ─► Camoufox #0 ─┐   │
+                        │   slot 1 ─► Camoufox #1 ─┼─► │ web
+                        │   slot N ─► Camoufox #N ─┘   │
+                        │                              │
+                        │  per-request: SSRF guard,    │
+                        │  ad/media blocking, cookies, │
+                        │  goto → wait → content()     │
+                        └──────────────────────────────┘
+```
 
-**The easiest way to get data from the web.** Describe what you need, and our AI agent searches, navigates, and retrieves it. No URLs required.
+Request flow inside the rendering service
+(`apps/playwright-service-ts/README.md` has the full version):
 
-Agent is the evolution of our `/extract` endpoint: faster, more reliable, and doesn't require you to know the URLs upfront.
+1. `POST /scrape` validates the URL and runs the SSRF allowlist check.
+2. `CamoufoxPool.acquire()` leases a browser slot plus a fresh
+   browser context and page. Slot *N* is pinned to proxy *N* so a
+   fingerprint always matches its exit IP.
+3. Per-context routing enforces the SSRF policy again at request level,
+   drops ad-serving domains, and optionally blocks media.
+4. `page.goto()` → optional `wait_after_load` / `check_selector` →
+   `page.content()` (or raw body for JSON/plain-text responses).
+5. The lease is released; the page counts against the instance's recycle
+   budget (`CAMOUFOX_RECYCLE_PAGES` / `CAMOUFOX_MAX_LIFETIME_MS`). Recycling
+   waits for in-flight pages to drain, so running scrapes are never cut off.
+6. A crashed browser is detected via Playwright's `disconnected` event and
+   replaced by a background supervisor with exponential backoff; that scrape
+   gets a `502` so Firecrawl's engine waterfall can fall through to the next
+   engine.
+
+---
+
+## Key features
+
+- **Drop-in rendering backend** — same `POST /scrape` contract as Firecrawl's
+  previous Chromium service; `PLAYWRIGHT_MICROSERVICE_URL` keeps working.
+- **Pooled Camoufox instances** — configurable pool size and pages-per-browser
+  (`CAMOUFOX_POOL_SIZE`, `CAMOUFOX_PAGES_PER_BROWSER`); capacity is
+  `pool size × pages per browser`.
+- **Automatic fingerprint rotation** — every launch generates a fresh
+  fingerprint; instances recycle after N pages or a max lifetime.
+- **Proxy-pinned slots** — single `PROXY_SERVER` or a `PROXY_SERVERS` pool
+  (`server|username|password` entries); slot *N* always uses entry *N*.
+- **GeoIP fingerprint alignment** — timezone/locale/geolocation/WebRTC follow
+  the proxy exit IP (`CAMOUFOX_GEOIP=auto` by default when a proxy is set).
+- **SSRF protection in depth** — target validation at the HTTP layer, a
+  per-browser local guard proxy, and request interception in every context;
+  service workers are blocked by default so traffic can't bypass interception.
+- **Fail-fast under load** — bounded acquire timeouts and cooperative
+  recycling, so the HTTP layer returns real statuses instead of hanging past
+  Firecrawl's scrape timeout.
+- **Observability** — `GET /health` reports `engine: "camoufox"` plus per-slot
+  fingerprints, page counts, and recycle counters; structured JSON logs.
+- **Hardened container** — runs as non-root, `dumb-init` reaps orphaned
+  Firefox children, Firefox-sized `shm_size` and memory limits in Compose.
+- **Full Firecrawl surface on top** — scrape, crawl, map, batch scrape,
+  search, and the Firecrawl SDKs all work against the self-hosted API.
+
+---
+
+## Prerequisites
+
+- **Docker** with the Compose v2 plugin (`docker compose`, not the legacy
+  `docker-compose`). [Install Docker](https://docs.docker.com/get-docker/).
+- For running the rendering service outside Docker: **Node.js ≥ 22.13** and
+  **pnpm 11** (`corepack enable`), plus the system libraries for Firefox
+  (`pnpm exec playwright-core install-deps firefox` on Debian/Ubuntu).
+- For the full API stack from source: Redis, PostgreSQL, and the Go toolchain
+  for the `go-html-to-md` shared library — or just use Compose, which wires
+  all of this for you.
+- Optional: an OpenAI-compatible API key for AI extraction features; a proxy
+  (or pool of proxies) for production crawling; a SearXNG endpoint for the
+  `/search` API.
+
+---
+
+## Installation
+
 ```bash
-curl -X POST 'https://api.firecrawl.dev/v2/agent' \
-  -H 'Authorization: Bearer fc-YOUR_API_KEY' \
+git clone <your-camocrawl-repo-url> camocrawl
+cd camocrawl
+
+# 1. Create your environment file from the documented template
+#    (see SELF_HOST.md — the block below is the minimal starting point)
+cat > .env <<'EOF'
+PORT=3002
+HOST=0.0.0.0
+USE_DB_AUTHENTICATION=false
+BULL_AUTH_KEY=CHANGEME
+EOF
+
+# 2. Build and start everything (API, Camoufox rendering service,
+#    Redis, RabbitMQ, Postgres)
+docker compose build
+docker compose up
+```
+
+The API listens on `http://localhost:3002` and the Bull queue dashboard on
+`http://localhost:3002/admin/CHANGEME/queues`.
+
+> The first build downloads the Camoufox browser, the GeoLite2 city database,
+> and bundled addons into the rendering-service image, so it takes longer
+> than a plain rebuild. This is expected.
+
+---
+
+## Quick start
+
+**1. Scrape a page** (single URL → Markdown/HTML via the API):
+
+```bash
+curl -X POST http://localhost:3002/v1/scrape \
   -H 'Content-Type: application/json' \
-  -d '{
-    "prompt": "Find the pricing plans for Notion"
-  }'
+  -d '{"url": "https://example.com", "formats": ["markdown"]}'
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "result": "Notion offers the following pricing plans:\n\n1. Free - $0/month...\n2. Plus - $10/seat/month...\n3. Business - $18/seat/month...",
-    "sources": ["https://www.notion.so/pricing"]
-  }
-}
-```
+**2. Talk to the rendering service directly** (what the API calls internally):
 
-#### Agent with Structured Output
-
-Use a schema to get structured data:
-```python
-from firecrawl import Firecrawl
-from pydantic import BaseModel, Field
-from typing import List, Optional
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-class Founder(BaseModel):
-    name: str = Field(description="Full name of the founder")
-    role: Optional[str] = Field(None, description="Role or position")
-
-class FoundersSchema(BaseModel):
-    founders: List[Founder] = Field(description="List of founders")
-
-result = app.agent(
-    prompt="Find the founders of Firecrawl",
-    schema=FoundersSchema
-)
-
-print(result.data)
-```
-```json
-{
-  "founders": [
-    {"name": "Eric Ciarla", "role": "Co-founder"},
-    {"name": "Nicolas Camara", "role": "Co-founder"},
-    {"name": "Caleb Peffer", "role": "Co-founder"}
-  ]
-}
-```
-
-#### Agent with URLs (Optional)
-
-Focus the agent on specific pages:
-```python
-result = app.agent(
-    urls=["https://docs.firecrawl.dev", "https://firecrawl.dev/pricing"],
-    prompt="Compare the features and pricing information"
-)
-```
-
-#### Model Selection
-
-Choose between two models based on your needs:
-
-| Model | Cost | Best For |
-|-------|------|----------|
-| `spark-1-mini` (default) | 60% cheaper | Most tasks |
-| `spark-1-pro` | Standard | Complex research, critical data gathering |
-```python
-result = app.agent(
-    prompt="Compare enterprise features across Firecrawl, Apify, and ScrapingBee",
-    model="spark-1-pro"
-)
-```
-
-
-**When to use Pro:**
-- Comparing data across multiple websites
-- Extracting from sites with complex navigation or auth
-- Research tasks where the agent needs to explore multiple paths
-- Critical data where accuracy is paramount
-
-Learn more about Spark models in our [Agent documentation](https://docs.firecrawl.dev/features/agent).
-
-### Crawl
-
-Crawl an entire website and get content from all pages.
 ```bash
-curl -X POST 'https://api.firecrawl.dev/v2/crawl' \
-  -H 'Authorization: Bearer fc-YOUR_API_KEY' \
+curl -X POST http://localhost:3000/scrape \
   -H 'Content-Type: application/json' \
-  -d '{
-    "url": "https://docs.firecrawl.dev",
-    "limit": 100,
-    "scrapeOptions": {
-      "formats": ["markdown"]
-    }
-  }'
+  -d '{"url": "https://example.com", "wait_after_load": 1000, "timeout": 15000}'
+# -> {"content": "<!DOCTYPE html>...", "pageStatusCode": 200, "contentType": "text/html"}
 ```
 
-Returns a job ID:
-```json
-{
-  "success": true,
-  "id": "123-456-789",
-  "url": "https://api.firecrawl.dev/v2/crawl/123-456-789"
-}
-```
+**3. Check pool health** (per-slot fingerprints, capacity, recycle counters):
 
-#### Check Crawl Status
 ```bash
-curl -X GET 'https://api.firecrawl.dev/v2/crawl/123-456-789' \
-  -H 'Authorization: Bearer fc-YOUR_API_KEY'
-```
-```json
-{
-  "status": "completed",
-  "total": 50,
-  "completed": 50,
-  "creditsUsed": 50,
-  "data": [
-    {
-      "markdown": "# Page Title\n\nContent...",
-      "metadata": {"title": "Page Title", "sourceURL": "https://..."}
-    }
-  ]
-}
+curl http://localhost:3000/health
 ```
 
-**Note:** The [SDKs](#sdks) handle polling automatically for a better developer experience.
+**4. Crawl a site** (async job, then poll):
 
-### Map
-
-Discover all URLs on a website instantly.
 ```bash
-curl -X POST 'https://api.firecrawl.dev/v2/map' \
-  -H 'Authorization: Bearer fc-YOUR_API_KEY' \
+JOB=$(curl -s -X POST http://localhost:3002/v1/crawl \
   -H 'Content-Type: application/json' \
-  -d '{"url": "https://firecrawl.dev"}'
+  -d '{"url": "https://example.com", "limit": 10}' | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
+curl http://localhost:3002/v1/crawl/$JOB
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "links": [
-    {"url": "https://firecrawl.dev", "title": "Firecrawl", "description": "Turn websites into LLM-ready data"},
-    {"url": "https://firecrawl.dev/pricing", "title": "Pricing", "description": "Firecrawl pricing plans"},
-    {"url": "https://firecrawl.dev/blog", "title": "Blog", "description": "Firecrawl blog"}
-  ]
-}
-```
+With a Firecrawl SDK, point it at your instance instead of the cloud
+(no API key needed for self-hosted):
 
-#### Map with Search
-
-Find specific URLs within a site:
 ```python
 from firecrawl import Firecrawl
 
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-result = app.map("https://firecrawl.dev", search="pricing")
-# Returns URLs ordered by relevance to "pricing"
-```
-
-### Batch Scrape
-
-Scrape multiple URLs at once:
-```python
-from firecrawl import Firecrawl
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-job = app.batch_scrape([
-    "https://firecrawl.dev",
-    "https://docs.firecrawl.dev",
-    "https://firecrawl.dev/pricing"
-], formats=["markdown"])
-
-for doc in job.data:
-    print(doc.metadata.source_url)
-```
-
----
-
-## SDKs
-
-Our SDKs provide a convenient way to use all Firecrawl features and automatically handle polling for async operations.
-
-### Python
-
-Install the SDK:
-```bash
-pip install firecrawl-py
-```
-```python
-from firecrawl import Firecrawl
-
-app = Firecrawl(api_key="fc-YOUR_API_KEY")
-
-# Scrape a single URL
-doc = app.scrape("https://firecrawl.dev", formats=["markdown"])
+app = Firecrawl(api_key="no-key-needed", api_url="http://localhost:3002")
+doc = app.scrape("https://example.com", formats=["markdown"])
 print(doc.markdown)
-
-# Use the Agent for autonomous data gathering
-result = app.agent(prompt="Find the founders of Stripe")
-print(result.data)
-
-# Crawl a website (automatically waits for completion)
-docs = app.crawl("https://docs.firecrawl.dev", limit=50)
-for doc in docs.data:
-    print(doc.metadata.source_url, doc.markdown[:100])
-
-# Search the web
-results = app.search("best AI data tools 2024", limit=10)
-print(results)
 ```
 
-### Node.js
+---
 
-Install the SDK:
+## Docker / Docker Compose
+
+Services in [`docker-compose.yaml`](./docker-compose.yaml):
+
+| Service | Image / build | Purpose |
+|---------|---------------|---------|
+| `api` | builds `apps/api` | Firecrawl API + workers; serves `:3002` |
+| `playwright-service` | builds `apps/playwright-service-ts` | **CamoCrawl's Camoufox pool**; serves `:3000`, health-gated before the API starts |
+| `redis` | `redis:alpine` | rate limits, caching |
+| `rabbitmq` | `rabbitmq:3-management` | job transport |
+| `nuq-postgres` | builds `apps/nuq-postgres` | queue persistence |
+| `foundationdb` / `foundationdb-init` | `foundationdb/foundationdb:7.3.63` | experimental queue backend (enable with `NUQ_BACKEND=fdb`) |
+
+Useful commands:
+
 ```bash
-npm install firecrawl
+docker compose up --build playwright-service   # rebuild just the browser service
+docker compose logs -f playwright-service      # watch pool launches / recycles
+docker compose exec nuq-postgres psql          # DB maintenance (no DB port is exposed)
+docker compose down
 ```
+
+Kubernetes users: Helm values and manifests under
+`examples/kubernetes/` include the Camoufox settings
+(`CAMOUFOX_POOL_SIZE`, `CAMOUFOX_RECYCLE_PAGES`,
+`CAMOUFOX_MAX_LIFETIME_MS`, `CAMOUFOX_GEOIP`, resource requests/limits sized
+for Firefox process trees). See the chart README for install steps.
+
+---
+
+## Configuration and environment variables
+
+All rendering-service settings are parsed in
+`apps/playwright-service-ts/config.ts` and **fail fast with a `ConfigError`**
+on malformed values rather than silently falling back.
+
+### Concurrency
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `MAX_CONCURRENT_PAGES` | `10` | Total in-flight pages across the whole pool |
+| `CAMOUFOX_POOL_SIZE` | `2` | Camoufox instances kept warm (~300–500 MB each — raise container memory together) |
+| `CAMOUFOX_PAGES_PER_BROWSER` | `ceil(MAX / POOL)` | Concurrent pages per instance |
+| `CAMOUFOX_ACQUIRE_TIMEOUT_MS` | `30000` | How long a request waits for a free browser before failing |
+
+### Recycling (fingerprint rotation)
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `CAMOUFOX_RECYCLE_PAGES` | `100` | Pages served before an instance is replaced |
+| `CAMOUFOX_MAX_LIFETIME_MS` | `1800000` (30 min) | Max instance age before replacement |
+| `CAMOUFOX_RELAUNCH_BACKOFF_MS` / `CAMOUFOX_RELAUNCH_BACKOFF_MAX_MS` | `1000` / `30000` | Crash-relaunch backoff range |
+
+### Proxies and GeoIP
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `PROXY_SERVER` (+ `PROXY_USERNAME` / `PROXY_PASSWORD`) | — | Single upstream proxy for all browsers |
+| `PROXY_SERVERS` | — | `server\|username\|password` entries separated by `;`; slot *N* pinned to entry *N*; takes precedence over `PROXY_SERVER` |
+| `CAMOUFOX_GEOIP` | `auto` | `auto` = align fingerprint geo/timezone/locale with the proxy exit IP whenever a proxy is configured; `true`/`false` force it |
+
+### Fingerprint tuning
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `CAMOUFOX_HEADLESS` | `true` | Headless mode |
+| `CAMOUFOX_OS` | random | `linux`, `macos`, `windows` (or comma-separated list to sample from) |
+| `CAMOUFOX_LOCALE` | random | e.g. `en-US,en` |
+| `CAMOUFOX_WINDOW` | — | Pin spoofed window size, e.g. `1280x800` (leave unset to keep Camoufox self-consistent) |
+| `CAMOUFOX_VIEWPORT` | — | Pin Playwright viewport, e.g. `1280x800` |
+| `CAMOUFOX_HUMANIZE` | `false` | Human-like cursor movement (`true` or seconds) |
+| `CAMOUFOX_BLOCK_WEBRTC` | `true` (in Compose) | Disable WebRTC |
+| `CAMOUFOX_BLOCK_IMAGES` | `false` | Block images at browser level |
+| `CAMOUFOX_BLOCK_SERVICE_WORKERS` | `true` | Keep request interception authoritative (Firefox has no per-context service-worker block) |
+| `CAMOUFOX_ENABLE_CACHE` | `false` | Let the browser cache pages |
+| `CAMOUFOX_FIREFOX_PREFS` | — | JSON object merged into Firefox launch prefs |
+| `CAMOUFOX_DEBUG` | `false` | Log the generated fingerprint config |
+| `CAMOUFOX_EXECUTABLE_PATH` | — | Custom browser binary path |
+| `CAMOUFOX_LAUNCH_TIMEOUT_MS` | `90000` | Cap on a single browser launch |
+
+### General / API stack
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `PORT` | `3000` (service) / `3002` (API) | Listen ports |
+| `PLAYWRIGHT_MICROSERVICE_URL` | `http://playwright-service:3000/scrape` (Compose) | Where the API sends render requests |
+| `ALLOW_LOCAL_WEBHOOKS` | `false` | Permit scraping private/internal addresses (dev only) |
+| `BLOCK_MEDIA` | `false` | Abort image/audio/video requests |
+| `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
+| `SHUTDOWN_TIMEOUT_MS` | `20000` | Grace period on SIGTERM/SIGINT |
+| `BULL_AUTH_KEY` | `CHANGEME` | Queue-admin UI secret — **change this on any reachable deployment** |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OLLAMA_BASE_URL` | — | AI extraction features |
+| `SEARXNG_ENDPOINT` | — | Self-hosted search backend |
+
+The full self-host template with security notes lives in
+[`SELF_HOST.md`](./SELF_HOST.md).
+
+---
+
+## Example crawl / API usage
+
+Render path (Camoufox service contract — also what `PLAYWRIGHT_MICROSERVICE_URL` points at):
+
+```bash
+# JavaScript-rendered page, wait 2 s for client hydration, require a selector
+curl -X POST http://localhost:3000/scrape \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "url": "https://example.com/app",
+    "wait_after_load": 2000,
+    "timeout": 30000,
+    "headers": {"Cookie": "session=abc"},
+    "check_selector": "#content"
+  }'
+```
+
+Firecrawl API path (crawl + poll; SDKs handle polling for you):
+
+```bash
+curl -X POST http://localhost:3002/v1/crawl \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "url": "https://docs.example.com",
+    "limit": 50,
+    "scrapeOptions": {"formats": ["markdown"]}
+  }'
+# {"success": true, "id": "123-456-789", "url": "http://localhost:3002/v1/crawl/123-456-789"}
+
+curl http://localhost:3002/v1/crawl/123-456-789
+```
+
 ```javascript
+// Node.js SDK against a self-hosted CamoCrawl instance
 import { Firecrawl } from 'firecrawl';
 
-const app = new Firecrawl({ apiKey: 'fc-YOUR_API_KEY' });
-
-// Scrape a single URL
-const doc = await app.scrape('https://firecrawl.dev', { formats: ['markdown'] });
+const app = new Firecrawl({ apiKey: 'no-key-needed', apiUrl: 'http://localhost:3002' });
+const doc = await app.scrape('https://example.com', { formats: ['markdown'] });
 console.log(doc.markdown);
-
-// Use the Agent for autonomous data gathering
-const result = await app.agent({ prompt: 'Find the founders of Stripe' });
-console.log(result.data);
-
-// Crawl a website (automatically waits for completion)
-const docs = await app.crawl('https://docs.firecrawl.dev', { limit: 50 });
-docs.data.forEach(doc => {
-    console.log(doc.metadata.sourceURL, doc.markdown.substring(0, 100));
-});
-
-// Search the web
-const results = await app.search('best AI data tools 2024', { limit: 10 });
-results.data.web.forEach(result => {
-    console.log(`${result.title}: ${result.url}`);
-});
 ```
 
-### Go
-
-Install the SDK:
-```bash
-go get github.com/firecrawl/firecrawl/apps/go-sdk
-```
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"log"
-
-	firecrawl "github.com/firecrawl/firecrawl/apps/go-sdk"
-	"github.com/firecrawl/firecrawl/apps/go-sdk/option"
-)
-
-func main() {
-	// Create a client (reads FIRECRAWL_API_KEY from environment)
-	client, err := firecrawl.NewClient(option.WithAPIKey("fc-YOUR_API_KEY"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-	// Scrape a single URL
-	doc, err := client.Scrape(ctx, "https://firecrawl.dev", &firecrawl.ScrapeOptions{
-		Formats: []string{"markdown"},
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(doc.Markdown)
-
-	// Use the Agent for autonomous data gathering
-	agent, err := client.Agent(ctx, &firecrawl.AgentOptions{
-		Prompt: "Find the founders of Stripe",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(agent.Data)
-
-	// Crawl a website (automatically waits for completion)
-	job, err := client.Crawl(ctx, "https://docs.firecrawl.dev", &firecrawl.CrawlOptions{
-		Limit: firecrawl.Int(50),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Crawled %d pages\n", len(job.Data))
-
-	// Search the web
-	results, err := client.Search(ctx, "best AI data tools 2024", &firecrawl.SearchOptions{
-		Limit: firecrawl.Int(10),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(results)
-}
-```
-
-### Java
-
-Add the dependency ([Gradle/Maven](https://docs.firecrawl.dev/sdks/java#installation)):
-```groovy
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-    implementation 'com.github.firecrawl:firecrawl-java-sdk:2.0'
-}
-```
-```java
-import dev.firecrawl.client.FirecrawlClient;
-import dev.firecrawl.model.*;
-
-FirecrawlClient client = new FirecrawlClient(
-    System.getenv("FIRECRAWL_API_KEY"), null, null
-);
-
-// Scrape a single URL
-ScrapeParams scrapeParams = new ScrapeParams();
-scrapeParams.setFormats(new String[]{"markdown"});
-FirecrawlDocument doc = client.scrapeURL("https://firecrawl.dev", scrapeParams);
-System.out.println(doc.getMarkdown());
-
-// Use the Agent for autonomous data gathering
-AgentParams agentParams = new AgentParams("Find the founders of Stripe");
-AgentResponse start = client.createAgent(agentParams);
-AgentStatusResponse result = client.getAgentStatus(start.getId());
-System.out.println(result.getData());
-
-// Crawl a website (polls until completion)
-CrawlParams crawlParams = new CrawlParams();
-crawlParams.setLimit(50);
-CrawlStatusResponse job = client.crawlURL("https://docs.firecrawl.dev", crawlParams, null, 10);
-for (FirecrawlDocument page : job.getData()) {
-    System.out.println(page.getMetadata().get("sourceURL"));
-}
-
-// Search the web
-SearchParams searchParams = new SearchParams("best AI data tools 2024");
-searchParams.setLimit(10);
-SearchResponse results = client.search(searchParams);
-for (SearchResult r : results.getResults()) {
-    System.out.println(r.getTitle() + ": " + r.getUrl());
-}
-```
-
-### Elixir
-
-Add the dependency:
-```elixir
-def deps do
-  [
-    {:firecrawl, "~> 1.0"}
-  ]
-end
-```
-```elixir
-# Scrape a URL
-{:ok, response} = Firecrawl.scrape_and_extract_from_url(
-  url: "https://firecrawl.dev",
-  formats: ["markdown"]
-)
-
-# Crawl a website
-{:ok, response} = Firecrawl.crawl_urls(
-  url: "https://docs.firecrawl.dev",
-  limit: 50
-)
-
-# Search the web
-{:ok, response} = Firecrawl.search_and_scrape(
-  query: "best AI data tools 2024",
-  limit: 10
-)
-
-# Map URLs
-{:ok, response} = Firecrawl.map_urls(url: "https://example.com")
-```
-
-### Rust
-
-Add the dependency:
-```toml
-[dependencies]
-firecrawl = "2"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-```
-```rust
-use firecrawl::{Client, ScrapeOptions, Format, CrawlOptions};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new("fc-YOUR_API_KEY")?;
-
-    // Scrape a URL
-    let document = client.scrape("https://firecrawl.dev", None).await?;
-    println!("{:?}", document.markdown);
-
-    // Crawl a website
-    let options = CrawlOptions {
-        limit: Some(50),
-        ..Default::default()
-    };
-    let result = client.crawl("https://docs.firecrawl.dev", options).await?;
-    println!("Crawled {} pages", result.data.len());
-
-    // Search the web
-    let response = client.search("best web scraping tools 2024", None).await?;
-    println!("{:?}", response.data);
-
-    Ok(())
-}
-```
-
-### Ruby
-
-Install the SDK:
-```bash
-gem install firecrawl-sdk
-```
-```ruby
-require "firecrawl"
-
-client = Firecrawl::Client.new(api_key: "fc-YOUR_API_KEY")
-
-# Scrape a single URL
-doc = client.scrape("https://firecrawl.dev",
-  Firecrawl::Models::ScrapeOptions.new(formats: ["markdown"]))
-puts doc.markdown
-
-# Use the Agent for autonomous data gathering
-result = client.agent(
-  Firecrawl::Models::AgentOptions.new(prompt: "Find the founders of Stripe"))
-puts result.data
-
-# Crawl a website (automatically waits for completion)
-job = client.crawl("https://docs.firecrawl.dev",
-  Firecrawl::Models::CrawlOptions.new(limit: 50))
-job.data.each { |d| puts d.metadata.source_url }
-
-# Search the web
-results = client.search("best AI data tools 2024",
-  Firecrawl::Models::SearchOptions.new(limit: 10))
-puts results
-```
-
-### .NET
-
-Install the SDK:
-```bash
-dotnet add package firecrawl-sdk
-```
-```csharp
-using Firecrawl;
-using Firecrawl.Models;
-
-var client = new FirecrawlClient("fc-YOUR_API_KEY");
-
-// Scrape a single URL
-var doc = await client.ScrapeAsync("https://firecrawl.dev",
-    new ScrapeOptions { Formats = new List<object> { "markdown" } });
-Console.WriteLine(doc.Markdown);
-
-// Crawl a website (automatically waits for completion)
-var job = await client.CrawlAsync("https://docs.firecrawl.dev",
-    new CrawlOptions { Limit = 50 });
-Console.WriteLine($"Crawled {job.Data.Count} pages");
-
-// Search the web
-var results = await client.SearchAsync("best AI data tools 2024",
-    new SearchOptions { Limit = 10 });
-Console.WriteLine(results);
-```
-
-### PHP
-
-Install the SDK:
-```bash
-composer require firecrawl/firecrawl-sdk
-```
-```php
-<?php
-
-use Firecrawl\Client\FirecrawlClient;
-use Firecrawl\Models\ScrapeOptions;
-use Firecrawl\Models\CrawlOptions;
-use Firecrawl\Models\SearchOptions;
-
-$client = FirecrawlClient::create(apiKey: 'fc-YOUR_API_KEY');
-
-// Scrape a single URL
-$doc = $client->scrape('https://firecrawl.dev', ScrapeOptions::with(
-    formats: ['markdown'],
-));
-echo $doc->getMarkdown();
-
-// Crawl a website (automatically waits for completion)
-$job = $client->crawl('https://docs.firecrawl.dev', CrawlOptions::with(limit: 50));
-foreach ($job->getData() as $page) {
-    echo $page->getMetadata()['sourceURL'] . "\n";
-}
-
-// Search the web
-$results = $client->search('best AI data tools 2024', SearchOptions::with(limit: 10));
-print_r($results);
-```
+Response shapes, SDKs for Python/Go/Java/Rust/Ruby/.NET/PHP/Elixir, and the
+search/agent/extract endpoints follow upstream Firecrawl — see the
+[Firecrawl documentation](https://docs.firecrawl.dev) and
+[`SELF_HOST.md`](./SELF_HOST.md).
 
 ---
 
-## Integrations
+## Development
 
-**Agents & AI Tools**
-- [Firecrawl Skill](https://docs.firecrawl.dev/sdks/cli)
-- [Firecrawl CLI Skills](https://github.com/firecrawl/cli#agent-skills)
-- [Firecrawl Workflows](https://github.com/firecrawl/firecrawl-workflows)
-- [Firecrawl MCP](https://github.com/mendableai/firecrawl-mcp-server)
+Prerequisites: Node.js ≥ 22.13, pnpm 11, Docker (for Redis/Postgres or the
+full stack).
 
-**Platforms**
-- [Lovable](https://docs.lovable.dev/integrations/firecrawl)
-- [Zapier](https://zapier.com/apps/firecrawl/integrations)
-- [n8n](https://n8n.io/integrations/firecrawl/)
+```bash
+# Rendering service only (fast loop, mocked-browser tests need no browser)
+cd apps/playwright-service-ts
+pnpm install
+pnpm run camoufox:fetch   # downloads the Camoufox browser + GeoLite2 data
+pnpm run dev              # hot entry point (tsx api.ts), default PORT 3000
+pnpm test                 # vitest suite
+pnpm run build && pnpm start
 
-[View all integrations →](https://www.firecrawl.dev/integrations)
+# Full stack
+docker compose build
+docker compose up
+```
 
-**Missing your favorite tool?** [Open an issue](https://github.com/mendableai/firecrawl/issues) and let us know!
-
----
-
-## Resources
-
-- [Documentation](https://docs.firecrawl.dev)
-- [API Reference](https://docs.firecrawl.dev/api-reference/introduction)
-- [Playground](https://firecrawl.dev/playground)
-- [Changelog](https://firecrawl.dev/changelog)
+Per [AGENTS.md](./AGENTS.md), API changes should add end-to-end `snips`
+tests (`apps/api/src/__tests__/snips/`) covering a happy path and at least
+one failure path, gated on `TEST_SUITE_SELF_HOSTED`/AI availability, and run
+them via `pnpm harness jest …` rather than hand-rolled servers.
 
 ---
 
-## Open Source vs Cloud
+## Testing
 
-Firecrawl is open source under the AGPL-3.0 license. The cloud version at [firecrawl.dev](https://firecrawl.dev) includes additional features:
+| Scope | Command | Notes |
+|-------|---------|-------|
+| Rendering service unit/integration | `cd apps/playwright-service-ts && pnpm test` | 57 tests across `config`, `scrape`, `pool`, `api` specs; browser is mocked, no Camoufox download needed |
+| Rendering service build | `cd apps/playwright-service-ts && pnpm run build` | `tsc` (ESM/`nodenext`); must pass clean |
+| Compose validity | `docker compose config` | Validates service wiring without starting containers |
+| API end-to-end (incl. `camoufox-rendering.test.ts`) | `cd apps/api && pnpm harness jest …` | Needs the full harness (API + workers + rendering service); Camoufox assertions only run where `PLAYWRIGHT_MICROSERVICE_URL` is configured on a self-hosted instance |
+| CI | `.github/workflows/test-server.yml` | Restores/caches the Camoufox browser, starts the rendering service, waits on `/health`, runs the matrix |
 
-![Open Source vs Cloud](https://raw.githubusercontent.com/firecrawl/firecrawl/main/img/open-source-cloud.png)
+`apps/api/src/__tests__/snips/v2/camoufox-rendering.test.ts` covers the
+Camoufox-specific win conditions: client-side JS execution, non-empty
+rendered markup over concurrent load, and stable results across fingerprint
+recycles.
 
-To run locally, see the [Contributing Guide](https://github.com/firecrawl/firecrawl/blob/main/CONTRIBUTING.md). To self-host, see [Self-Hosting Guide](https://docs.firecrawl.dev/contributing/self-host).
+---
+
+## Repository structure
+
+```
+.
+├── LICENSE                      # AGPL-3.0 (+ Firecrawl copyright notice)
+├── NOTICE                         # fork/attribution map: Firecrawl, Camoufox, CamoCrawl
+├── THIRD_PARTY_LICENSES/          # MPL-2.0 text for camoufox-js + dependency index
+├── README.md                      # this file
+├── SELF_HOST.md                   # self-host env template + ops guide
+├── docker-compose.yaml            # api + playwright-service (Camoufox) + redis/rabbit/pg
+├── logo.png                       # CamoCrawl brand logo
+├── apps/
+│   ├── api/                       # Firecrawl API, workers, extraction (AGPL-3.0)
+│   │   └── src/__tests__/snips/v2/camoufox-rendering.test.ts  # CamoCrawl e2e
+│   ├── playwright-service-ts/     # ★ CamoCrawl's Camoufox rendering service
+│   │   ├── api.ts                 # HTTP surface (rewritten from Firecrawl's Chromium service)
+│   │   ├── camoufox.ts            # one-instance launch w/ fresh fingerprint + SSRF guard
+│   │   ├── pool.ts                # fixed-size pool, pinning, recycling, crash recovery
+│   │   ├── scrape.ts              # per-request context/routing/extraction
+│   │   ├── ssrf.ts                # allowlist checks shared by HTTP layer + proxy
+│   │   ├── config.ts              # env parsing, proxy/fingerprint options
+│   │   ├── logger.ts              # minimal structured logger
+│   │   ├── *.spec.ts              # mocked-browser test suite (no browser needed)
+│   │   ├── Dockerfile             # fetches Camoufox browser at build time, runs as non-root
+│   │   └── README.md              # service-level deep dive
+│   ├── js-sdk/ python-sdk/ go-sdk/ …  # Firecrawl SDKs (MIT, per-directory LICENSE)
+│   ├── nuq-postgres/ redis/ test-site/ test-suite/ ui/ siem/ …
+├── examples/kubernetes/           # Helm chart + manifests (Camoufox settings included)
+└── .github/workflows/             # CI incl. Camoufox fetch/cache + health-gated startup
+```
+
+**Code provenance at a glance:**
+
+| Category | Paths | License basis |
+|----------|-------|---------------|
+| Firecrawl-derived (unmodified) | `apps/api`, SDKs, `apps/ui`, most of repo | AGPL-3.0 (root `LICENSE`); SDKs/UI per-dir MIT |
+| Firecrawl-derived (modified by CamoCrawl) | `apps/playwright-service-ts/api.ts`, `Dockerfile`, `docker-compose.yaml`, Helm values/manifests, `test-server.yml`, `SELF_HOST.md`, service `package.json`/`tsconfig` | AGPL-3.0; modifications marked in file headers |
+| CamoCrawl-original | `apps/playwright-service-ts/{camoufox,config,pool,scrape,ssrf,logger}.ts`, `*.spec.ts`, `vitest.config.ts`, `camoufox-rendering.test.ts` | AGPL-3.0; header in each file |
+| Camoufox (not vendored) | `camoufox-js` npm dep; browser binary fetched at build | MPL-2.0 (plus LGPLv3 note for upstream `cursory`, GeoLite2 EULA) |
+| Third-party deps | `playwright-core`, `express`, `proxy-chain`, `ipaddr.js`, `dotenv`, … | Apache-2.0 / MIT / BSD-2-Clause per package; see `THIRD_PARTY_LICENSES/` |
+
+No reorganisation was needed to make these boundaries clear: Camoufox is a
+runtime dependency (never copied into the tree), and all CamoCrawl-original
+or rewritten sources live in `apps/playwright-service-ts/` with provenance
+headers — so no files were moved.
+
+---
+
+## Troubleshooting
+
+**Rendering service won't start / `/health` returns 503**
+`{"status":"unhealthy","error":"No healthy Camoufox browser is available"}` —
+every pool slot failed to launch. Check `docker compose logs
+playwright-service` for `camoufox launch failed`: common causes are no
+network egress to fetch GeoIP data on first launch, too-small `shm_size`, or
+an unreachable upstream proxy. CI waits on `/health` (up to 120 s) rather
+than the TCP port for exactly this reason.
+
+**Scrapes return 502 `Browser instance failed…`**
+A browser died mid-scrape and its slot is being replaced; the request was
+already failed over. Occasional 502s under memory pressure mean the pool is
+undersized — raise `CAMOUFOX_POOL_SIZE` *and* the container's memory limit
+together (~300–500 MB per instance).
+
+**Scrapes time out waiting for a browser**
+`Timed out … waiting for a free Camoufox browser` — pool saturated. Raise
+`CAMOUFOX_POOL_SIZE` (more fingerprints) or `CAMOUFOX_PAGES_PER_BROWSER`
+(more reuse), or lower client concurrency. `GET /health` shows
+`activePages` vs `capacity`.
+
+**Empty or selector-missing renders**
+If `check_selector` fails with `Required selector not found`, the page likely
+needs longer hydration — increase `wait_after_load`. If raw HTML is short or
+empty, the target may be blocking the datacenter IP: configure
+`PROXY_SERVER`/`PROXY_SERVERS`.
+
+**Service workers / exfiltration concerns**
+`CAMOUFOX_BLOCK_SERVICE_WORKERS` defaults to `true` because Firefox lacks a
+per-context service-worker block and workers would bypass request
+interception. Leave it on unless you have a specific reason.
+
+**Redis / Postgres / queue issues, auth warnings, ports**
+Unchanged from upstream — see [`SELF_HOST.md`](./SELF_HOST.md)
+troubleshooting (Supabase/auth warnings are benign on self-hosted installs;
+keep the DB port internal; set a strong `BULL_AUTH_KEY`).
+
+**It is the sole responsibility of end users to respect websites' policies
+when scraping.** Adhere to applicable privacy policies and terms of use;
+CamoCrawl respects `robots.txt` by default via the Firecrawl engine.
+
+---
+
+## Upstream projects and acknowledgements
+
+- **[Firecrawl](https://github.com/firecrawl/firecrawl)** by Sideguide
+  Technologies Inc. — the platform this fork builds on: API, crawling engine,
+  extraction, and SDKs. Thank you for open-sourcing it under AGPL-3.0.
+- **[Camoufox](https://github.com/daijro/camoufox)** by Daijro — the
+  anti-detect Firefox fork doing the actual rendering, including its
+  fingerprint-generation and stealth work.
+- **[camoufox-js](https://github.com/apify/camoufox-js)** — the JS client used
+  to launch Camoufox (MPL-2.0).
+- **[Playwright](https://playwright.dev/)** (Microsoft) — browser automation
+  protocol and `playwright-core` client (Apache-2.0).
+- **[Fingerprint Generator (`fpgen`)](https://github.com/scrapfly/fingerprint-generator)**
+  (Scrapfly), **[Cursory](https://github.com/Vinyzu/cursory)** (Vinyzu),
+  LibreWolf/Ghostery/FastFox/PeskyFox patch and config sources — via
+  Camoufox's documented lineage.
+- **MaxMind GeoLite2** — geolocation data used for fingerprint/proxy
+  alignment (separate EULA).
+
+---
+
+## Licensing
+
+**Plain-English summary (not legal advice).** CamoCrawl is a combined work
+containing components under different licenses, and each component's terms
+keep applying to that component:
+
+- **Firecrawl-derived code and CamoCrawl-original code** (the API, workers,
+  the rendering service in `apps/playwright-service-ts`, Compose/Helm/CI
+  wiring, docs) are covered by the **GNU Affero General Public License v3.0
+  (AGPL-3.0)** in the root [`LICENSE`](./LICENSE). In practice this means you
+  can run, study, modify, and share them — but if you run a modified version
+  as a network service (which a self-hosted crawl API is), you must offer
+  every user of that service the corresponding source code, keep all
+  copyright/license notices intact, and license your modifications under the
+  same terms.
+- **Firecrawl SDKs and some UI components** carry their own **MIT License**
+  notices — see the `LICENSE` files in those directories. Those permissive
+  terms apply to those directories as marked upstream.
+- **Camoufox pieces are *not* relicensed by this repo.** The `camoufox-js`
+  client is **MPL-2.0** (copy in
+  [`THIRD_PARTY_LICENSES/camoufox-js-MPL-2.0.md`](./THIRD_PARTY_LICENSES/camoufox-js-MPL-2.0.md));
+  the Camoufox browser binary you download at build time is likewise
+  **MPL-2.0** upstream, with the noted exception that its vendored `cursory`
+  cursor library is **LGPLv3-or-later**, and the GeoLite2 data is under
+  MaxMind's own EULA. Nothing in this repository changes those terms.
+- **Other npm dependencies** (`playwright-core`, `express`, `proxy-chain`,
+  `ipaddr.js`, `dotenv`, …) keep their own Apache-2.0/MIT/BSD-2-Clause terms
+  — indexed in [`THIRD_PARTY_LICENSES/README.md`](./THIRD_PARTY_LICENSES/README.md).
+
+Because upstream files keep their own requirements, **it would be wrong to
+say the whole repository is under a single license** — the table in
+[Repository structure](#repository-structure), [`NOTICE`](./NOTICE), and the
+per-file headers state which terms apply where.
+
+> **⚠️ Contributors: do not remove or alter existing copyright notices,
+> license headers, `LICENSE` files, or attribution notices.** If you add a
+> file derived from Firecrawl or from any upstream project, copy its header
+> and note the modification. If you add a dependency with attribution or
+> copyleft terms, record it in `THIRD_PARTY_LICENSES/` and `NOTICE`. When in
+> doubt, keep the notice and ask in your pull request.
 
 ---
 
 ## Contributing
 
-We love contributions! Please read our [Contributing Guide](https://github.com/firecrawl/firecrawl/blob/main/CONTRIBUTING.md) before submitting a pull request.
+CamoCrawl welcomes contributions — bug reports, fingerprint/stealth tuning,
+docs, and test coverage are especially valuable.
 
-### Contributors
+1. Fork the repo and create a focused branch.
+2. For API changes, add `snips` end-to-end tests per [AGENTS.md](./AGENTS.md)
+   (one happy path + at least one failure path); for rendering-service
+   changes, extend the mocked `*.spec.ts` suite (`pnpm test` — no browser
+   needed).
+3. Run the checks your change touches: `pnpm run build`, `pnpm test`,
+   `docker compose config`, and — if you touched the render path — a real
+   crawl against the Camoufox service.
+4. Preserve every copyright/license header and attribution file, and update
+   `NOTICE` / `THIRD_PARTY_LICENSES/` if your change adds upstream code or
+   dependencies.
+5. Open a pull request describing the behavior change, the tests, and any
+   licensing-relevant additions.
 
-<a href="https://github.com/firecrawl/firecrawl/graphs/contributors">
-  <img alt="contributors" src="https://contrib.rocks/image?repo=firecrawl/firecrawl"/>
-</a>
+By contributing you agree your changes will be distributed under the same
+terms as the code you modify (AGPL-3.0 for the service/API tree; see
+[Licensing](#licensing)). If you cannot agree to that for a particular
+change, say so in the PR rather than stripping notices.
 
 ---
 
-## License
-
-This project is primarily licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). The SDKs and some UI components are licensed under the MIT License. See the LICENSE files in specific directories for details.
-
----
-
-**It is the sole responsibility of end users to respect websites' policies when scraping.** Users are advised to adhere to applicable privacy policies and terms of use. By default, Firecrawl respects robots.txt directives. By using Firecrawl, you agree to comply with these conditions.
-
-<p align="right" style="font-size: 14px; color: #555; margin-top: 20px;">
-  <a href="#readme-top" style="text-decoration: none; color: #007bff; font-weight: bold;">
-    ↑ Back to Top ↑
-  </a>
-</p>
+*End users are solely responsible for complying with target websites'
+policies and applicable law when scraping. CamoCrawl respects robots.txt by
+default.*

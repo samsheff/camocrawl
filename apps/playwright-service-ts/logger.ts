@@ -1,3 +1,10 @@
+/*
+ * CamoCrawl — original rendering-service module.
+ * Part of CamoCrawl (Firecrawl + Camoufox backend), licensed under the
+ * GNU Affero General Public License v3.0 or later; see root LICENSE.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Do not remove this header or any upstream copyright/license notices.
+ */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const LEVEL_WEIGHT: Record<LogLevel, number> = {

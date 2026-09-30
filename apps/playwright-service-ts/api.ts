@@ -1,3 +1,11 @@
+/*
+ * CamoCrawl — this file rewrites Firecrawl's Chromium/Playwright rendering
+ * service on top of a Camoufox browser pool. Firecrawl portions:
+ * Copyright (c) 2024 Sideguide Technologies Inc. (AGPL-3.0-or-later; see
+ * root LICENSE). CamoCrawl modifications are likewise AGPL-3.0-or-later.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Do not remove this header or any upstream copyright/license notices.
+ */
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
 import { pathToFileURL } from 'url';
