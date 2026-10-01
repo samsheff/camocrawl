@@ -4,9 +4,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
 
-# Camoufox is a Firefox build, so it needs the GTK/X11/DBus runtime libraries
-# that `playwright install-deps firefox` would pull in for Chromium too, plus
-# `curl` for a build-time connectivity check.
+# curl and certificates are needed to download Camoufox at build time.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     curl ca-certificates dumb-init fonts-liberation fonts-noto-color-emoji \
@@ -17,6 +15,11 @@ RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 WORKDIR /usr/src/app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
+
+# Camoufox is Firefox-based. The slim Node image does not include GTK (or the
+# other Firefox shared libraries); use the dependency list matching our pinned
+# playwright-core version rather than maintaining an incomplete apt list.
+RUN node node_modules/playwright-core/cli.js install-deps firefox
 
 COPY . .
 
@@ -35,6 +38,7 @@ RUN pnpm run build
 RUN pnpm exec camoufox-js fetch \
   && test -x /opt/camoufox/camoufox-bin \
   && test -f /opt/camoufox/GeoLite2-City.mmdb \
+  && ! ldd /opt/camoufox/libmozgtk.so | grep -q 'not found' \
   && chmod -R a+rX /opt/camoufox
 
 RUN chown -R node:node /usr/src/app \
