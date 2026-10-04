@@ -156,6 +156,7 @@ services:
       WORKER_PORT: ${WORKER_PORT:-3005}
       NUQ_RABBITMQ_URL: amqp://rabbitmq:5672
       HARNESS_STARTUP_TIMEOUT_MS: ${HARNESS_STARTUP_TIMEOUT_MS:-60000}
+      NUQ_WORKER_COUNT: ${NUQ_WORKER_COUNT:-5}
       ENV: local
     depends_on:
       redis:
