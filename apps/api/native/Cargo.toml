@@ -10,13 +10,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
-kuchikiki = "0.8.2"
+kuchikiki = "0.8.9-speedreader"
 lol_html = "2.6.0"
 pdf-inspector = "0.1.0"
 maud = "0.27.0"
 napi = { version = "3.0.0", features = ["serde-json", "tokio_rt"] }
 napi-derive = "3.0.0"
-nodesig = { git = "https://github.com/firecrawl/nodesig" }
+nodesig = { git = "https://github.com/firecrawl/nodesig", rev = "b847d586d5eec33d9d6209c971ec9068c605657c" }
 psl = "2.1.140"
 regex = "1.11.2"
 roxmltree = "0.20.0"
