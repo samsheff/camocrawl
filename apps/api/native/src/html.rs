@@ -39,7 +39,7 @@ fn _extract_base_href(
   html: &str,
   url: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-  let document = parse_html().one(html);
+  let document = parse_html().one(html).document_node;
   let url = Url::parse(url)?;
   _extract_base_href_from_document(&document, &url)
 }
@@ -68,7 +68,7 @@ pub async fn extract_links(html: Option<String>) -> napi::Result<Vec<String>> {
       None => return Ok(Vec::new()),
     };
 
-    let document = parse_html().one(html.as_str());
+    let document = parse_html().one(html.as_str()).document_node;
 
     let anchors: Vec<_> = document
       .select("a[href]")
@@ -144,7 +144,7 @@ macro_rules! insert_meta_property {
 fn _extract_metadata(
   html: &str,
 ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error + Send + Sync>> {
-  let document = parse_html().one(html);
+  let document = parse_html().one(html).document_node;
   let mut out = HashMap::<String, Value>::new();
 
   let head_node = document
@@ -415,14 +415,14 @@ struct ImageSource {
 fn _transform_html_inner(
   opts: TransformHtmlOptions,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-  let mut document = parse_html().one(opts.html.as_ref());
+  let mut document = parse_html().one(opts.html.as_ref()).document_node;
   let url = Url::parse(&_extract_base_href_from_document(
     &document,
     &Url::parse(&opts.url)?,
   )?)?;
 
   if !opts.include_tags.is_empty() {
-    let new_document = parse_html().one("<div></div>");
+    let new_document = parse_html().one("<div></div>").document_node;
     let root = new_document
       .select_first("div")
       .map_err(|_| "Failed to select root element")?;
@@ -672,7 +672,7 @@ pub async fn transform_html(opts: TransformHtmlOptions) -> napi::Result<String> 
 }
 
 fn _get_inner_json(html: &str) -> Result<String, ()> {
-  Ok(parse_html().one(html).select_first("body")?.text_contents())
+  Ok(parse_html().one(html).document_node.select_first("body")?.text_contents())
 }
 
 /// Extract inner text content from HTML body.
@@ -715,7 +715,7 @@ fn _extract_attributes(
   html: &str,
   options: &ExtractAttributesOptions,
 ) -> Result<Vec<ExtractedAttributeResult>, Box<dyn std::error::Error + Send + Sync>> {
-  let document = parse_html().one(html);
+  let document = parse_html().one(html).document_node;
   let mut results = Vec::new();
 
   for selector_config in &options.selectors {
@@ -781,7 +781,7 @@ fn _extract_images(
   html: &str,
   base_url: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
-  let document = parse_html().one(html);
+  let document = parse_html().one(html).document_node;
   let base_url = Url::parse(base_url)?;
   let base_href = _extract_base_href_from_document(&document, &base_url)?;
   let base_href_url = Url::parse(&base_href)?;
